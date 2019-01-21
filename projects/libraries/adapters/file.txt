@@ -1,0 +1,6 @@
+Intel(R) HD Graphics 620
+NVIDIA GeForce GTX 950M
+Status adapter: 1
+Intel(R) HD Graphics 620
+NVIDIA GeForce GTX 950M
+Current adapter: NVIDIA GeForce GTX 950M

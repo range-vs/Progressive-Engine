@@ -1,0 +1,29 @@
+cbuffer ConstantBufferPS: register(b0)
+{
+	int mode;
+}     
+
+struct VS_INPUT
+    { 
+        float4 Pos: SV_POSITION; 
+		float3 TexCoord: TEXCOORD0;
+    	float3 Normal: TEXCOORD1; 
+    }; 
+
+    Texture2DArray textures: register(t0);
+    SamplerState samplerImage: register(s0);
+
+    float4 main(VS_INPUT input): SV_Target 
+    {
+	 //float2 tex = float2(input.TexCoord.x, input.TexCoord.y);
+	 //uint ind = uint(input.TexCoord.z);
+         //return textures[0].Sample(samplerImage, tex);
+
+     float ambient_light = 0.5f;
+	 float4 color = textures.Sample(samplerImage, input.TexCoord);
+	 clip(color.a - 0.85f);
+	 if(mode == 0)
+		return float4(0,0,1,1);
+	 color *= ambient_light;
+	 return color;
+    } 

@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="code\render\window.h" />
+    <ClInclude Include="code\entry_point\framework.h" />
+    <ClInclude Include="code\io\Listener.h" />
+    <ClInclude Include="code\utilites\util.h" />
+    <ClInclude Include="code\io\ListenerSource.h" />
+    <ClInclude Include="code\io\ListenersEngine.h" />
+    <ClInclude Include="code\render\direct_device.h" />
+    <ClInclude Include="code\render\camera.h" />
+    <ClInclude Include="code\utilites\types.h" />
+    <ClInclude Include="code\utilites\buffers.h" />
+    <ClInclude Include="code\utilites\macros_global.h" />
+    <ClInclude Include="code\utilites\macros_general.h" />
+    <ClInclude Include="code\render\light.h" />
+    <ClInclude Include="code\render\model.h" />
+    <ClInclude Include="code\render\shaders_buffer.h" />
+    <ClInclude Include="code\render\textures_buffer.h" />
+    <ClInclude Include="code\export_functions\export_function_editor.h" />
+    <ClInclude Include="code\render\model_buffers.h" />
+    <ClInclude Include="code\utilites\calculate.h" />
+    <ClInclude Include="code\render\ray_pick.h" />
+    <ClInclude Include="code\utilites\debug_console.h" />
+    <ClInclude Include="code\render\fustrum_culling.h" />
+    <ClInclude Include="code\render\primitive.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="code\entry_point\entry_point.cpp" />
+    <ClCompile Include="code\render\window.cpp" />
+    <ClCompile Include="code\entry_point\framework.cpp" />
+    <ClCompile Include="code\io\ListenerSource.cpp" />
+    <ClCompile Include="code\utilites\util.cpp" />
+    <ClCompile Include="code\render\direct_device.cpp" />
+    <ClCompile Include="code\render\camera.cpp" />
+    <ClCompile Include="code\render\light.cpp" />
+    <ClCompile Include="code\render\model.cpp" />
+    <ClCompile Include="code\render\shaders_buffer.cpp" />
+    <ClCompile Include="code\render\textures_buffer.cpp" />
+    <ClCompile Include="code\export_functions\export_function_editor.cpp" />
+    <ClCompile Include="code\utilites\buffers.cpp" />
+    <ClCompile Include="code\utilites\calculate.cpp" />
+    <ClCompile Include="code\render\ray_pick.cpp" />
+    <ClCompile Include="code\utilites\debug_console.cpp" />
+    <ClCompile Include="code\render\fustrum_culling.cpp" />
+    <ClCompile Include="code\render\primitive.cpp" />
+  </ItemGroup>
+</Project>

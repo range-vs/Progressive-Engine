@@ -1,0 +1,18 @@
+cbuffer ConstantBufferPS: register(b0)
+{
+	int mode;
+} 
+
+struct VS_OUTPUT
+{
+	float4 Pos: SV_POSITION;
+	float4 Color: COLOR0;
+};
+
+float4 main(VS_OUTPUT input): SV_Target
+{
+	if(mode == 1)
+		return input.Color;
+	else
+		return float4(0,0,1,1);
+}

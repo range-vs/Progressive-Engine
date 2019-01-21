@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <outIntermediate>$(SolutionDir)..\intermediate\$(Platform)\$(Configuration)\$(ProjectName)\</outIntermediate>
+    <outLibraries>$(SolutionDir)..\libraries\$(Platform)\$(Configuration)\</outLibraries>
+    <outBins>$(SolutionDir)..\bins\$(Platform)\$(Configuration)\</outBins>
+    <workingDirectory>$(SolutionDir)..\</workingDirectory>
+    <outPlugins>$(SolutionDir)..\plug_bins\$(Platform)\$(Configuration)\</outPlugins>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OutDir>$(outBins)</OutDir>
+    <IntDir>$(outIntermediate)</IntDir>
+    <TargetExt>
+    </TargetExt>
+    <TargetName>
+    </TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup />
+  <ItemGroup>
+    <BuildMacro Include="outIntermediate">
+      <Value>$(outIntermediate)</Value>
+    </BuildMacro>
+    <BuildMacro Include="outLibraries">
+      <Value>$(outLibraries)</Value>
+    </BuildMacro>
+    <BuildMacro Include="outBins">
+      <Value>$(outBins)</Value>
+    </BuildMacro>
+    <BuildMacro Include="workingDirectory">
+      <Value>$(workingDirectory)</Value>
+    </BuildMacro>
+    <BuildMacro Include="outPlugins">
+      <Value>$(outPlugins)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,64 @@
+global proc int progressiveExportOptions ( string $parent,
+								   string $action,
+								   string $initialSettings,
+								   string $resultCallback )
+{
+	int		$bResult;
+	string	$currentOptions;
+	string	$optionList[];
+	string	$optionBreakDown[];
+	int		$index;
+	string $checkInstName;
+
+	if ($action == "post") {
+		setParent $parent;
+
+		columnLayout -adj true progressiveOptionsColumn;
+		    string $on = (uiRes("m_progressiveExportOptions.optOn"));
+            string $off = (uiRes("m_progressiveExportOptions.optOff"));
+			string $nameInstansingOpt = (uiRes("m_progressiveExportOptions.optInstansing"));
+			$checkInstName = `checkBox -label $nameInstansingOpt -value(false) instans`;
+
+			//radioButtonGrp
+			//	-label (uiRes("m_progressiveExportOptions.optInstansing"))
+			//	-nrb 2 -cw3 175 75 75
+			//	-labelArray2 $on $off instans;
+                 
+                				
+		// Now set to current settings.
+		$currentOptions = $initialSettings;
+		if (size($currentOptions) > 0) { 
+			tokenize($currentOptions, ";", $optionList);
+			for ($index = 0; $index < size($optionList); $index++) {
+				tokenize($optionList[$index], "=", $optionBreakDown);				
+				if ($optionBreakDown[0] == "instansing") {
+					if ($optionBreakDown[1] == "0") {
+						//radioButtonGrp -e -sl 2 instans;
+						checkBox -edit -value(false) instans;
+					} else {
+						//radioButtonGrp -e -sl 1 instans;
+						checkBox -edit -value(true) instans;
+					}
+			}
+		}
+		$result = 1;
+		}
+	
+	} else if ($action == "query") {
+
+		//if (`radioButtonGrp -q -sl instans` == 1) {
+		if(`checkBox -query -value instans` == 1){
+			$currentOptions = "instansing=1;";
+		} else{
+			$currentOptions = "instansing=0;";
+		}
+		
+		eval($resultCallback+" \""+$currentOptions+"\""); // отправляем строку настроек во входной метод плагина
+		
+		$result = 1;
+	} else {
+		$bResult = 0;
+	}
+	
+	return $bResult;
+}

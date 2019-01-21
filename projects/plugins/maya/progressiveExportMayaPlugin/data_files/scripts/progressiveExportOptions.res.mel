@@ -1,0 +1,3 @@
+displayString -replace -value "Instansing" m_progressiveExportOptions.optInstansing;
+displayString -replace -value "On:" m_progressiveExportOptions.optOn;
+displayString -replace -value "Off:" m_progressiveExportOptions.optOff;
