@@ -17,15 +17,23 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hIntOld, LPSTR cmdLine, int typeSh
 	/*if (isMonitor(args[1], &hLib))
 	{
 		if (!wcscmp(L"-editor", args[2])) // запускаем редактор
-		{*/
+		{
 			WriteFile(&hLib);
 			Program::Main(line);
-		/*}
-		else if (!wcscmp(L"-game", args[2])) // запускаем игру
-		{
-			// TODO: реализовать загрузку dll(общие методы)
 		}
-	}
+		else if (!wcscmp(L"-game", args[2])) // запускаем игру
+		*/{
+				HINSTANCE hLib = LoadLibrary(L"game.dll");
+				if (hLib == NULL) // descr error
+					return -1;
+				StartGame* func = (StartGame*)GetProcAddress((HMODULE)hLib, "startGame");
+				if (func == NULL) // descr error
+					return -1;
+				UINT res = func(hInst);
+				FreeLibrary((HMODULE)hLib);
+				return res;
+		}
+	/*}
 	else
 	{
 		FreeLibrary((HMODULE)hLib);

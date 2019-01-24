@@ -1,6 +1,6 @@
 #include "Window.h"
 
-bool Window::Init(HINSTANCE hInst, const wchar_t * name, const wchar_t * _class, int x, int y, int w, int h, const HWND& hwnd_main)
+bool Window::Init(HINSTANCE hInst, const wchar_t * name, const wchar_t * _class, int x, int y, int w, int h, const HWND& hwnd_main, int style)
 {
 	ClassName = _class;
 	this->hInst = hInst;
@@ -33,7 +33,7 @@ bool Window::Init(HINSTANCE hInst, const wchar_t * name, const wchar_t * _class,
 		return false;
 	}
 
-	hwnd = CreateWindowEx(NULL, _class, name, WS_CHILDWINDOW, x, y, w, h, hwnd_main, NULL,
+	hwnd = CreateWindowEx(NULL, _class, name, style, x, y, w, h, hwnd_main, NULL,
 		hInst, (LPVOID)this);
 	if (!hwnd)
 	{
@@ -131,6 +131,26 @@ WPARAM Window::RunEditor(UINT style)
 		else
 			//SendMessage(Device->getDesctiptor(), WM_RENDER, NULL, NULL);
 			Device->renderEditor();
+	}
+	return msg.wParam;
+}
+
+WPARAM Window::RunGame(UINT style)
+{
+	ShowWindow(hwnd, style);
+	MSG msg;
+	while (true)
+	{
+		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		if (msg.message == WM_QUIT)
+			break;
+		else
+			//SendMessage(Device->getDesctiptor(), WM_RENDER, NULL, NULL);
+			Device->renderGame();
 	}
 	return msg.wParam;
 }

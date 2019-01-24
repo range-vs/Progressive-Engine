@@ -14,9 +14,10 @@ class Window
 
 public:
 	Window() : hwnd(NULL), hInst(NULL), ClassName(), Ls(new ListenerSource){};
-	bool Init(HINSTANCE hInst, const wchar_t* name, const wchar_t* _class, int x, int y, int w, int h, const HWND& hwnd_main);
+	bool Init(HINSTANCE hInst, const wchar_t* name, const wchar_t* _class, int x, int y, int w, int h, const HWND& hwnd_main, int style);
 	static LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
 	WPARAM RunEditor(UINT style);
+	WPARAM RunGame(UINT style);
 	void Release();
 	void AddListener(Listener* l);
 	HWND& get_hwnd() { return this->hwnd; };

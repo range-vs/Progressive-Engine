@@ -23,6 +23,7 @@ extern "C"
 using namespace gui;
 
 using FuncAdr = bool * (const std::string&);
+using StartGame = UINT (HINSTANCE);
 using FuncWriteFile = void*();
 
 bool isMonitor(const wchar_t* devName, HINSTANCE*);

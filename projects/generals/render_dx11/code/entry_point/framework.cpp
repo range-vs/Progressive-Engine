@@ -115,6 +115,22 @@ void SelectObjectListener::KeyUnPressed(const KeyCode & kc)
 	}*/
 }
 
+void GameInputListener::KeyPressed(const KeyCode & kc)
+{
+	switch (kc.virtualKey)
+	{
+
+	case vkEsc:
+	{
+		PostMessage(Device->getDesctiptor(), WM_QUIT, NULL, NULL);
+		break;
+	}
+
+	default: break;
+	}
+
+}
+
 // фрэймворк
 UINT Framework::RunEditor(const HINSTANCE& hInst, const HWND& hwnd_main)
 {
@@ -126,6 +142,9 @@ UINT Framework::RunEditor(const HINSTANCE& hInst, const HWND& hwnd_main)
 	}
 	else
 		LOGGING("Create window: OK");
+
+	kpselect.reset(new SelectObjectListener);
+	cameraListener.reset(new MKListener);
 
 	if (!cameraListener)
 	{
@@ -147,8 +166,8 @@ UINT Framework::RunEditor(const HINSTANCE& hInst, const HWND& hwnd_main)
 
 	RECT rect = { 0 };
 	GetWindowRect(hwnd_main, &rect);
-	bool result = Main->Init(hInst, L"NoName Engine Editor", L"engine_window", CW_USEDEFAULT, CW_USEDEFAULT,
-		rect.right - rect.left, rect.bottom - rect.top, hwnd_main); // запускаем инициализацию окна
+	bool result = Main->Init(hInst, L"Progressive Engine Editor", L"engine_window", CW_USEDEFAULT, CW_USEDEFAULT,
+		rect.right - rect.left, rect.bottom - rect.top, hwnd_main, WS_CHILDWINDOW); // запускаем инициализацию окна
 	if (!result)
 		return -1;
 
@@ -163,6 +182,43 @@ UINT Framework::RunEditor(const HINSTANCE& hInst, const HWND& hwnd_main)
 	SetFocus(main);*/
 
 	WPARAM message(Main->RunEditor(SW_SHOW));
+	Main->Release();
+	return (UINT)message;
+}
+
+UINT Framework::RunGame(const HINSTANCE & hInst, const HWND& hwnd_main)
+{
+	brain_memory<Window> Main(new Window);
+	if (!Main)
+	{
+		LOGGINGERR("Error create window: no memory");
+		return -1;
+	}
+	else
+		LOGGING("Create window: OK");
+
+	gameKey.reset(new GameInputListener);
+	if (!gameKey)
+	{
+		LOGGINGERR("Error create listener #1: no memory");
+		return -1;
+	}
+	else
+		LOGGING("Create listener #1: OK");
+
+	RECT rect = { 0 };
+	GetWindowRect(hwnd_main, &rect);
+	bool result = Main->Init(hInst, L"Progressive Engine Game", L"game_window", CW_USEDEFAULT, CW_USEDEFAULT,
+		rect.right - rect.left, rect.bottom - rect.top, hwnd_main, WS_OVERLAPPEDWINDOW); // запускаем инициализацию окна
+	if (!result)
+		return -1;
+
+	Main->AddListener(gameKey.get());
+	result = Device->initGame(Main->get_hwnd()); // здесь запускаем инициализацию устройства dx
+	if (!result)
+		return -1;
+
+	WPARAM message(Main->RunGame(SW_SHOW));
 	Main->Release();
 	return (UINT)message;
 }

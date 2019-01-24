@@ -137,6 +137,79 @@ bool Graphics::initEditor(HWND hwnd)
 	return true;
 }
 
+bool Graphics::initGame(HWND hwnd)
+{
+	srand((unsigned)time(nullptr)); // рандомизаци€ чисел
+
+	this->hwnd = hwnd;
+
+	RECT rect;
+	GetWindowRect(hwnd, &rect);
+	int h = rect.bottom - rect.top;
+	int w = rect.right - rect.left;
+
+	D3D_FEATURE_LEVEL levels[] = {
+		D3D_FEATURE_LEVEL_12_0,
+		D3D_FEATURE_LEVEL_11_1,
+		D3D_FEATURE_LEVEL_11_0,
+		D3D_FEATURE_LEVEL_10_1,
+		D3D_FEATURE_LEVEL_10_0,
+		D3D_FEATURE_LEVEL_9_3,
+		D3D_FEATURE_LEVEL_9_2,
+		D3D_FEATURE_LEVEL_9_1,
+	};
+	// применЄн dx10(изменена шейдерна€ модель на 4_0) - сделать выбор dx
+	// завести массив версий dx и массив версий шейдерной модели
+
+	DXGI_SWAP_CHAIN_DESC sdesc;
+	ZeroMemory(&sdesc, sizeof(sdesc));
+	sdesc.BufferCount = 1;
+	sdesc.BufferDesc.RefreshRate.Numerator = this->numerator;
+	sdesc.BufferDesc.RefreshRate.Denominator = this->denominator;
+	sdesc.OutputWindow = hwnd;
+	sdesc.SampleDesc.Count = 4;
+	sdesc.SampleDesc.Quality = 0;
+	sdesc.Windowed = true;
+	sdesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH; // разрешить переключение по alt + enter
+	sdesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	sdesc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	sdesc.BufferDesc.Height = 1080; // костыль
+	sdesc.BufferDesc.Width = 1920;
+
+	UINT flags(NULL);
+#ifdef DEBUG
+	flags = D3D11_CREATE_DEVICE_DEBUG;
+#endif
+	flags |= D3D11_CREATE_DEVICE_DISABLE_GPU_TIMEOUT;
+
+	HRESULT hr = D3D11CreateDeviceAndSwapChain(/*this->adapter*/NULL, /*D3D_DRIVER_TYPE_UNKNOWN*/D3D_DRIVER_TYPE_HARDWARE,
+		NULL, flags, levels, 8, D3D11_SDK_VERSION, &sdesc,
+		&swapChain, &device, NULL, &deviceContext);
+
+	if (FAILED(hr)) // если устройство никак не создалось, то выходим
+	{
+		string line = "Error create DX11 device";
+		LOGGINGERR(line);
+		return false;
+	}
+
+	this->currentMode = D3D11_FILLMODE::D3D11_FILLMODE_SOLID;
+	this->currentLevel = device->GetFeatureLevel();
+	this->createDescsTarget(w, h);
+	this->createTargetRender(w, h);
+	this->renderStateEdit(currentMode);
+
+	camera.Init(1.5f * GeneralMath::PI, GeneralMath::PI / 4, 180); // создаем камеру
+
+	char* versionShader = "5_0"; // верси€ шейдерной модели
+	collShaders.init(device, LR"(engine_resource\shaders)", versionShader); // загружаем все шейдеры
+
+	matrixProjection = Matrix::CreatePerspectiveFovLHMatrix(GeneralMath::PI / 4, w / (float)h, SCREEN_NEAR, SCREEN_DEPTH); // перспективна€ матрица
+
+	hr = swapChain->SetFullscreenState(true, nullptr);
+	return true;
+}
+
 bool Graphics::initSceneEditor()
 {
 	Matrix m;
@@ -329,6 +402,19 @@ void Graphics::renderEditor()
 		hr = swapChain->Present(1, 0);
 	/*if (hr != S_OK)
 		LOGMESSAGE("Error present swap chain!");*/
+}
+
+void Graphics::renderGame()
+{
+	float color[] = { 0.36f, 0.36f, 0.36f, 1.0f }; // структуры color больше нет
+	deviceContext->ClearDepthStencilView(DepthStancilBuffer, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	deviceContext->ClearRenderTargetView(backBuffer, color);
+
+	HRESULT hr(NULL);
+	if (!this->vsync)
+		hr = swapChain->Present(0, 0);
+	else
+		hr = swapChain->Present(1, 0);
 }
 
 bool Graphics::_draw(const D3D11_FILLMODE & mode)
@@ -826,8 +912,3 @@ void Graphics::runFrustum()
 // TODO: все выделенные индексы надо запоминать -- «јѕќћ»Ќјё“—я
 // TODO: ray pick - добавить метод »«ћ≈Ќ≈Ќ»я модели
 // TODO: переделать класс raypick с поддержкой распараллеливани€(1 поток == 50 моделей, 20 потоков == 1 группа потоков
-
-
-// план:
-// следующее: зан€тьс€ движком(запустить двиг как игру, продумать основные моменты, подключить освещение(амбиент, спекулар и диффуз)) -- current TODO
-// написать dll дл€ запуска игрового окна - в это окно поместить рендер 

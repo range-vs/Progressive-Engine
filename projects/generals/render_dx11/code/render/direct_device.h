@@ -100,8 +100,10 @@ public:
 	void operator delete(void* p);
 
 	bool initEditor(HWND hwnd);
+	bool initGame(HWND hwnd);
 	bool initSceneEditor();
 	void renderEditor();
+	void renderGame();
 	void release();
 	bool resizeWindow(SIZE p);
 	void renderStateEdit(const D3D11_FILLMODE&);

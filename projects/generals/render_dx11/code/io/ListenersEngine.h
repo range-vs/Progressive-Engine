@@ -18,3 +18,9 @@ public:
 	void KeyUnPressed(const KeyCode& kc); // реализуем метод ќ“∆ј“»я клавиши
 	void MousePressed(const MouseData& kc); // реализуем метод Ќј∆ј“»я мышкой
 };
+
+class GameInputListener : public Listener // отлов нажатий в игре
+{
+public:
+	void KeyPressed(const KeyCode& kc); // реализуем метод Ќј∆ј“»я клавиши
+};
