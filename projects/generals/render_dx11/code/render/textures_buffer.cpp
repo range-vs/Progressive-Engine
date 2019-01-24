@@ -2,11 +2,12 @@
 
 ID3D11Texture2D* CollectionTextures::addTexture(ID3D11Device* device, const wstring & path)
 {
-	auto iter = textures.find(path);
+	wstring p = LR"(engine_resource\textures\)" + path;
+	auto iter = textures.find(p);
 	if (iter != textures.end())
 		return iter->second;
 	ID3D11Texture2D* r(nullptr);
-	HRESULT hr = DirectX::CreateDDSTextureFromFileEx(device, path.c_str(), 0u, D3D11_USAGE_STAGING, 0,
+	HRESULT hr = DirectX::CreateDDSTextureFromFileEx(device, p.c_str(), 0u, D3D11_USAGE_STAGING, 0,
 		D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ, 0, false, (ID3D11Resource**)&r, nullptr, nullptr);
 	if (hr != S_OK) // не смогли загрузить текстуру(её нет, или она повреждена)
 	{
@@ -16,7 +17,7 @@ ID3D11Texture2D* CollectionTextures::addTexture(ID3D11Device* device, const wstr
 		// возвращаем заглушку
 		return textures[LR"(engine_resource\textures\no_texture.dds)"];
 	}
-	textures.insert({ path, r });
+	textures.insert({ p, r });
 	return r;
 }
 

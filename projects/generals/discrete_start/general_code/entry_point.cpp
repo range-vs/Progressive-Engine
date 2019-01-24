@@ -23,7 +23,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hIntOld, LPSTR cmdLine, int typeSh
 		/*}
 		else if (!wcscmp(L"-game", args[2])) // запускаем игру
 		{
-			// TODO
+			// TODO: реализовать загрузку dll(общие методы)
 		}
 	}
 	else

@@ -68,7 +68,7 @@ using namespace std;
 namespace fs = experimental::filesystem;
 
 #if defined (_WIN32)
-#define strcasecmp stricmp
+#define strcasecmp _stricmp
 #endif
 
 #define NO_SMOOTHING_GROUP      -1
@@ -769,21 +769,26 @@ MStatus ProgressiveObject::writePolyFromBuffer(MFnMesh& fnMesh,
 	Material mat; // создаём материал
 	mat.nameMaterial = fnDN.name().asChar(); // запоминаем имя материала
 	mat.nameTexture = textureName.asChar(); // запоминаем имя текстуры
-	int index(-1);
-	if (texturesPath != "") // изменяем путь к текстуре
-	{
-		if (mat.nameTexture.find(texturesPath) == 0)
-		{
-			index = mat.nameTexture.find("engine_resource");
-			mat.nameTexture = mat.nameTexture.substr(index);
-		}
-		else
-		{
-			index = mat.nameTexture.find_last_of(R"(/)");
-			if (index != -1)
-				mat.nameTexture = mat.nameTexture.substr(index + 1);
-		}
-	}
+	//int index(-1);
+	//if (texturesPath != "") // изменяем путь к текстуре
+	//{
+	//	if (mat.nameTexture.find(texturesPath) == 0)
+	//	{
+	//		index = mat.nameTexture.find("engine_resource");
+	//		mat.nameTexture = mat.nameTexture.substr(index);
+	//	}
+	//	else
+	//	{
+	//		index = mat.nameTexture.find_last_of(R"(/)");
+	//		if (index != -1)
+	//			mat.nameTexture = mat.nameTexture.substr(index + 1);
+	//	}
+	//}
+	string nameTextureFinal(mat.nameTexture.begin() + mat.nameTexture.find_last_of(R"(/)") + 1, mat.nameTexture.end()); // получаем полное имя текстуры
+	string pref;
+	if (nameTextureFinal.find("_") != string::npos) // если есть префикс(подпапка) - то получаем
+		pref = string(nameTextureFinal.begin(), nameTextureFinal.begin() + nameTextureFinal.find("_"));
+	mat.nameTexture = pref + (pref != "" ? R"(/)" : "") + nameTextureFinal; // конструируем финальное имя текстуры с префиксом
 	currentIndexTexture = ((bufMaterials.insert({ mat, bufMaterials.size() })).first)->second; // помещаем материал в буфер
 
 	// здесь перебираются все полигоны, которые принадлежат этому материалу и все их данные записываются в один буфер(потом запишем буфер в файл)

@@ -108,7 +108,7 @@ bool Graphics::initEditor(HWND hwnd)
 	//lights.emplace_back(new DirectionLight({ -30.f, 80.f, 0.f}, color));
 	//lights.back()->Enable(true);
 
-	if (!collTextures.addTexture(device, LR"(engine_resource\textures\no_texture.dds)"))
+	if (!collTextures.addTexture(device, L"no_texture.dds"))
 	{
 		// тут описываем фатал еррор, что нет заглушки
 		return false;
@@ -132,7 +132,7 @@ bool Graphics::initEditor(HWND hwnd)
 	matrixProjection = Matrix::CreatePerspectiveFovLHMatrix(GeneralMath::PI / 4, w / (float)h, SCREEN_NEAR, SCREEN_DEPTH); // перспективная матрица
 	runFrustum(); // первый запуск Frustum Culling
 
-    dc.init("Debug output");
+   // dc.init("Debug output");
 
 	return true;
 }
@@ -829,5 +829,6 @@ void Graphics::runFrustum()
 
 
 // план:
-// выделение каёмки модели -- current TODO
-// следующее: заняться движком(запустить двиг как игру, продумать основные моменты, подключить освещение(амбиент, спекулар и диффуз))
+// следующее: заняться движком(запустить двиг как игру, продумать основные моменты, подключить освещение(амбиент, спекулар и диффуз)) -- current TODO
+// написать dll для запуска игрового окна - в это окно поместить рендер 
+// сделать переэкспорт всех моделей из maya

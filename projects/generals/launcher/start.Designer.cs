@@ -77,7 +77,7 @@
             this.engineTitleText.Name = "engineTitleText";
             this.engineTitleText.Size = new System.Drawing.Size(461, 20);
             this.engineTitleText.TabIndex = 4;
-            this.engineTitleText.Text = "Движок без названия, стартовые настройки:";
+            this.engineTitleText.Text = "Progressive Engine build v 0.9, стартовые настройки:";
             this.engineTitleText.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // programStartLabel
