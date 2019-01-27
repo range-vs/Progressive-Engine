@@ -1,7 +1,11 @@
 #include "Window.h"
 
+HHOOK Window::ExistingKeyboardProc(NULL);
+
 bool Window::Init(HINSTANCE hInst, const wchar_t * name, const wchar_t * _class, int x, int y, int w, int h, const HWND& hwnd_main, int style)
 {
+	hookKeyboardProc(hInst);
+
 	ClassName = _class;
 	this->hInst = hInst;
 
@@ -47,7 +51,6 @@ bool Window::Init(HINSTANCE hInst, const wchar_t * name, const wchar_t * _class,
 
 LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
-	//LOGGING
 	static Window* w(nullptr);
 	CREATESTRUCT* data;
 
@@ -65,15 +68,18 @@ LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT message, WPARAM wparam, LPAR
 			SIZE p;
 			p.cx = LOWORD(lparam);
 			p.cy = HIWORD(lparam);
-			if (p.cx == 0 || p.cy == 0)
-				break;
-			if (!Device->resizeWindow(p)) // обработать ошибки
-			{
-				PostQuitMessage(0);
-			}
+			std::string out = "size screen: " + std::to_string(p.cx) + ", " + std::to_string(p.cy) + "\n";
+			OutputDebugStringA(out.c_str());
+			DWORD targetRenderMessage = Device->getTypeApp() ? WM_RENDERE : WM_RENDERG;
+			if (Device->resizeWindow(p, targetRenderMessage) == -1)
+				PostMessage(hwnd, WM_QUIT, NULL, NULL);
 		}
 		break;
 	}
+
+	case WM_ACTIVATE:
+		Device->restoreFullScreen(LOWORD(wparam));
+		break;
 
 	case WM_ADDMODELMOUSE:
 	{
@@ -91,9 +97,15 @@ LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT message, WPARAM wparam, LPAR
 		break;
 	}
 
-	case WM_RENDER:
+	case WM_RENDERE:
 	{
 		Device->renderEditor();
+		break;
+	}
+
+	case WM_RENDERG:
+	{
+		Device->renderGame();
 		break;
 	}
 
@@ -115,9 +127,8 @@ LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT message, WPARAM wparam, LPAR
 	return DefWindowProc(hwnd, message, wparam, lparam);
 }
 
-WPARAM Window::RunEditor(UINT style)
+WPARAM Window::RunEditor()
 {
-	ShowWindow(hwnd, style);
 	MSG msg;
 	while (true)
 	{
@@ -129,15 +140,14 @@ WPARAM Window::RunEditor(UINT style)
 		if (msg.message == WM_QUIT)
 			break;
 		else
-			//SendMessage(Device->getDesctiptor(), WM_RENDER, NULL, NULL);
-			Device->renderEditor();
+			SendMessage(Device->getDesctiptor(), WM_RENDERE, NULL, NULL);
+			//Device->renderEditor();
 	}
 	return msg.wParam;
 }
 
-WPARAM Window::RunGame(UINT style)
+WPARAM Window::RunGame()
 {
-	ShowWindow(hwnd, style);
 	MSG msg;
 	while (true)
 	{
@@ -149,21 +159,99 @@ WPARAM Window::RunGame(UINT style)
 		if (msg.message == WM_QUIT)
 			break;
 		else
-			//SendMessage(Device->getDesctiptor(), WM_RENDER, NULL, NULL);
-			Device->renderGame();
+			SendMessage(Device->getDesctiptor(), WM_RENDERG, NULL, NULL);
+			//Device->renderGame();
 	}
 	return msg.wParam;
 }
 
 void Window::Release()
 {
-	//Device->Release();
 	DestroyWindow(hwnd);
 	UnregisterClass(ClassName.c_str(), hInst);
-	//delete Graphics::getInstance();
+	unHookKeyboardProc();
 }
 
 void Window::AddListener(Listener * l)
 {
 	Ls->Add(l);
+}
+
+void Window::showWindow(UINT m)
+{
+	ShowWindow(hwnd, m);
+}
+
+bool Window::hookKeyboardProc(HINSTANCE hinst)
+{
+	ExistingKeyboardProc = SetWindowsHookEx(
+		WH_KEYBOARD_LL,
+		keyboardProcLowLevel,
+		hinst,
+		NULL);
+
+	if (!ExistingKeyboardProc)
+		return false;
+	else
+		return true;
+}
+
+LRESULT CALLBACK Window::keyboardProcLowLevel(int nCode, WPARAM wParam, LPARAM lParam)
+{
+	KBDLLHOOKSTRUCT * hookstruct = (KBDLLHOOKSTRUCT *)(lParam);
+
+	switch (wParam)
+	{
+	case WM_KEYDOWN:
+		break;
+	case WM_SYSKEYDOWN:
+		if ((((hookstruct->flags) >> 5) & 1))
+		{
+			// ALT +
+			switch (hookstruct->vkCode)
+			{
+			case VK_TAB: // ALT+TAB
+			{
+				Device->switchFocusForAltTab();
+			}
+			break;
+			case VK_RETURN: // ALT+ENTER
+				break;
+			case VK_ESCAPE: // ALT+ESC
+				break;
+			case VK_DELETE: // ALT+DEL
+				break;
+			};
+		}
+		break;
+	case WM_KEYUP:
+		break;
+	case WM_SYSKEYUP:
+		break;
+	}
+
+	return CallNextHookEx(ExistingKeyboardProc, nCode, wParam, lParam);
+}
+
+int Window::unHookKeyboardProc()
+{
+	if (ExistingKeyboardProc)
+	{
+		BOOL retcode = UnhookWindowsHookEx((HHOOK)keyboardProcLowLevel);
+
+		if (retcode)
+		{
+			// Successfully 
+		}
+		else
+		{
+			//Error 
+		}
+		return retcode;
+	}
+	else
+	{
+		//Error 
+		return -1;
+	}
 }

@@ -126,6 +126,12 @@ void GameInputListener::KeyPressed(const KeyCode & kc)
 		break;
 	}
 
+	case vkHome:
+	{
+		Device->switchModeScreen();
+		break;
+	}
+
 	default: break;
 	}
 
@@ -173,6 +179,7 @@ UINT Framework::RunEditor(const HINSTANCE& hInst, const HWND& hwnd_main)
 
 	Main->AddListener(kpselect.get()); // добавляем слушателя - выбор объекта/треугольника
 	Main->AddListener(cameraListener.get()); // добавляем слушателя - управление камерой
+	Main->showWindow(SW_SHOW);
 	result = Device->initEditor(Main->get_hwnd()); // здесь запускаем инициализацию устройства dx
 	if (!result)
 		return -1;
@@ -181,7 +188,7 @@ UINT Framework::RunEditor(const HINSTANCE& hInst, const HWND& hwnd_main)
 	child = Main->GetHWND();
 	SetFocus(main);*/
 
-	WPARAM message(Main->RunEditor(SW_SHOW));
+	WPARAM message(Main->RunEditor());
 	Main->Release();
 	return (UINT)message;
 }
@@ -206,19 +213,19 @@ UINT Framework::RunGame(const HINSTANCE & hInst, const HWND& hwnd_main)
 	else
 		LOGGING("Create listener #1: OK");
 
-	RECT rect = { 0 };
-	GetWindowRect(hwnd_main, &rect);
-	bool result = Main->Init(hInst, L"Progressive Engine Game", L"game_window", CW_USEDEFAULT, CW_USEDEFAULT,
-		rect.right - rect.left, rect.bottom - rect.top, hwnd_main, WS_OVERLAPPEDWINDOW); // запускаем инициализацию окна
+	bool result = Main->Init(hInst, L"Progressive Engine Game", L"game_window", 0, 0, // костыль, размер экрана надо вычислить
+		1920, 1080, hwnd_main, WS_OVERLAPPEDWINDOW); // запускаем инициализацию окна
 	if (!result)
 		return -1;
 
 	Main->AddListener(gameKey.get());
+
+	Main->showWindow(SW_SHOW);
 	result = Device->initGame(Main->get_hwnd()); // здесь запускаем инициализацию устройства dx
 	if (!result)
 		return -1;
 
-	WPARAM message(Main->RunGame(SW_SHOW));
+	WPARAM message(Main->RunGame());
 	Main->Release();
 	return (UINT)message;
 }

@@ -34,119 +34,23 @@ void Graphics::constructor(D3D11_FILLMODE cm, bool vs)
 	isMouseCapture = false;
 	visibleNet = true;
 	net = nullptr;
+	modeScreen = false;
+	isRender = false;
+	enableAltEnter = true;
+	fullscreenPlacement = windowedPlacement = { 0 };
+	typeApp = false;
 }
 
 bool Graphics::initEditor(HWND hwnd)
 {
+	typeApp = true;
 	srand((unsigned)time(nullptr)); // рандомизация чисел
 
 	this->hwnd = hwnd;
-
 	RECT rect;
 	GetWindowRect(hwnd, &rect);
-	int h = rect.bottom - rect.top;
-	int w = rect.right - rect.left;
-
-	D3D_FEATURE_LEVEL levels[] = {
-		D3D_FEATURE_LEVEL_12_0, 
-		D3D_FEATURE_LEVEL_11_1, 
-		D3D_FEATURE_LEVEL_11_0,
-		D3D_FEATURE_LEVEL_10_1,
-		D3D_FEATURE_LEVEL_10_0,
-		D3D_FEATURE_LEVEL_9_3,
-		D3D_FEATURE_LEVEL_9_2,
-		D3D_FEATURE_LEVEL_9_1,
-	};
-	// применён dx10(изменена шейдерная модель на 4_0) - сделать выбор dx
-	// завести массив версий dx и массив версий шейдерной модели
-
-	DXGI_SWAP_CHAIN_DESC sdesc;
-	ZeroMemory(&sdesc, sizeof(sdesc));
-	sdesc.BufferCount = 1;
-	sdesc.BufferDesc.RefreshRate.Numerator = this->numerator;
-	sdesc.BufferDesc.RefreshRate.Denominator = this->denominator;
-	sdesc.OutputWindow = hwnd;
-	sdesc.SampleDesc.Count = 4;
-	sdesc.SampleDesc.Quality = 0;
-	sdesc.Windowed = true;
-	sdesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH; // разрешить переключение по alt + enter
-	sdesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	sdesc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-	sdesc.BufferDesc.Height = h;
-	sdesc.BufferDesc.Width = w;
-
-	width = (float)w;
-	height = (float)h;
-
-	UINT flags(NULL);
-#ifdef DEBUG
-	flags = D3D11_CREATE_DEVICE_DEBUG;
-#endif
-	flags |= D3D11_CREATE_DEVICE_DISABLE_GPU_TIMEOUT;
-
-	HRESULT hr = D3D11CreateDeviceAndSwapChain(/*this->adapter*/NULL, /*D3D_DRIVER_TYPE_UNKNOWN*/D3D_DRIVER_TYPE_HARDWARE,
-		NULL, flags, levels, 8, D3D11_SDK_VERSION, &sdesc,
-		&swapChain, &device, NULL, &deviceContext);
-
-	if (FAILED(hr)) // если устройство никак не создалось, то выходим
-	{
-		string line = "Error create DX11 device";
-		LOGGINGERR(line);
-		return false;
-	}
-
-	this->currentMode = D3D11_FILLMODE::D3D11_FILLMODE_SOLID;
-	this->currentLevel = device->GetFeatureLevel();
-	this->createDescsTarget(w, h);
-	this->createTargetRender(w, h);
-	this->renderStateEdit(currentMode);
-
-	camera.Init(1.5f * GeneralMath::PI, GeneralMath::PI / 4, 180); // создаем камеру
-
-	// свет //
-	Color color = { 1,1,1,1 }; // white
-	//lights.emplace_back(new DirectionLight({ -30.f, 80.f, 0.f}, color));
-	//lights.back()->Enable(true);
-
-	if (!collTextures.addTexture(device, L"no_texture.dds"))
-	{
-		// тут описываем фатал еррор, что нет заглушки
-		return false;
-	}
-
-	char* versionShader = "5_0"; // версия шейдерной модели
-	collShaders.init(device, LR"(engine_resource\shaders)", versionShader); // загружаем все шейдеры
-	if (!rayPick.init(device, L"ray_picking", collShaders))
-	{
-		// описываем ошибку...
-		return false;
-	}
-	if (!frustum.init(device, L"frustum_culling", collShaders))
-	{
-		// описываем ошибку...
-		return false;
-	}
-
-	this->initSceneEditor(); // здесь нужна инициализация сцены для РЕДАКТОРА!!!
-
-	matrixProjection = Matrix::CreatePerspectiveFovLHMatrix(GeneralMath::PI / 4, w / (float)h, SCREEN_NEAR, SCREEN_DEPTH); // перспективная матрица
-	runFrustum(); // первый запуск Frustum Culling
-
-   // dc.init("Debug output");
-
-	return true;
-}
-
-bool Graphics::initGame(HWND hwnd)
-{
-	srand((unsigned)time(nullptr)); // рандомизация чисел
-
-	this->hwnd = hwnd;
-
-	RECT rect;
-	GetWindowRect(hwnd, &rect);
-	int h = rect.bottom - rect.top;
-	int w = rect.right - rect.left;
+	height = rect.bottom - rect.top;
+	width = rect.right - rect.left;
 
 	D3D_FEATURE_LEVEL levels[] = {
 		D3D_FEATURE_LEVEL_12_0,
@@ -170,11 +74,11 @@ bool Graphics::initGame(HWND hwnd)
 	sdesc.SampleDesc.Count = 4;
 	sdesc.SampleDesc.Quality = 0;
 	sdesc.Windowed = true;
-	sdesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH; // разрешить переключение по alt + enter
+	sdesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 	sdesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	sdesc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-	sdesc.BufferDesc.Height = 1080; // костыль
-	sdesc.BufferDesc.Width = 1920;
+	sdesc.BufferDesc.Height = height;
+	sdesc.BufferDesc.Width = width;
 
 	UINT flags(NULL);
 #ifdef DEBUG
@@ -195,18 +99,120 @@ bool Graphics::initGame(HWND hwnd)
 
 	this->currentMode = D3D11_FILLMODE::D3D11_FILLMODE_SOLID;
 	this->currentLevel = device->GetFeatureLevel();
-	this->createDescsTarget(w, h);
-	this->createTargetRender(w, h);
+	isRender = true;
+	if (resizeWindow({ (LONG)width, (LONG)height }, NULL) == -1)
+		return false;
+	if (!renderStateEdit(D3D11_FILLMODE::D3D11_FILLMODE_SOLID))
+		return false;
 	this->renderStateEdit(currentMode);
+	if (!setModeAltEnter())
+		return false;
 
 	camera.Init(1.5f * GeneralMath::PI, GeneralMath::PI / 4, 180); // создаем камеру
-
+	// свет //
+	Color color = { 1,1,1,1 }; // white
+	//lights.emplace_back(new DirectionLight({ -30.f, 80.f, 0.f}, color));
+	//lights.back()->Enable(true);
+	if (!collTextures.addTexture(device, L"no_texture.dds"))
+	{
+		// тут описываем фатал еррор, что нет заглушки
+		return false;
+	}
 	char* versionShader = "5_0"; // версия шейдерной модели
 	collShaders.init(device, LR"(engine_resource\shaders)", versionShader); // загружаем все шейдеры
+	if (!rayPick.init(device, L"ray_picking", collShaders))
+	{
+		// описываем ошибку...
+		return false;
+	}
+	if (!frustum.init(device, L"frustum_culling", collShaders))
+	{
+		// описываем ошибку...
+		return false;
+	}
+	this->initSceneEditor(); // здесь нужна инициализация сцены для РЕДАКТОРА!!!
+	matrixProjection = Matrix::CreatePerspectiveFovLHMatrix(GeneralMath::PI / 4, width / (float)height, SCREEN_NEAR, SCREEN_DEPTH); // перспективная матрица
+	runFrustum(); // первый запуск Frustum Culling
+   // dc.init("Debug output");
 
-	matrixProjection = Matrix::CreatePerspectiveFovLHMatrix(GeneralMath::PI / 4, w / (float)h, SCREEN_NEAR, SCREEN_DEPTH); // перспективная матрица
+	return true;
+}
 
+bool Graphics::initGame(HWND hwnd)
+{
+	modeScreen = true;
+	enableAltEnter = false;
+	typeApp = false;
+	srand((unsigned)time(nullptr)); // рандомизация чисел
+
+	this->hwnd = hwnd;
+	RECT rect;
+	GetWindowRect(hwnd, &rect);
+	height = rect.bottom - rect.top;
+	width = rect.right - rect.left;
+
+	D3D_FEATURE_LEVEL levels[] = {
+		D3D_FEATURE_LEVEL_12_0,
+		D3D_FEATURE_LEVEL_11_1,
+		D3D_FEATURE_LEVEL_11_0,
+		D3D_FEATURE_LEVEL_10_1,
+		D3D_FEATURE_LEVEL_10_0,
+		D3D_FEATURE_LEVEL_9_3,
+		D3D_FEATURE_LEVEL_9_2,
+		D3D_FEATURE_LEVEL_9_1,
+	};
+	// применён dx10(изменена шейдерная модель на 4_0) - сделать выбор dx
+	// завести массив версий dx и массив версий шейдерной модели
+
+	DXGI_SWAP_CHAIN_DESC sdesc;
+	ZeroMemory(&sdesc, sizeof(sdesc));
+	sdesc.BufferCount = 1;
+	sdesc.BufferDesc.RefreshRate.Numerator = this->numerator;
+	sdesc.BufferDesc.RefreshRate.Denominator = this->denominator;
+	sdesc.OutputWindow = hwnd;
+	sdesc.SampleDesc.Count = 4;
+	sdesc.SampleDesc.Quality = 0;
+	sdesc.Windowed = true;
+	sdesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+	sdesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	sdesc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	sdesc.BufferDesc.Height = height;
+	sdesc.BufferDesc.Width = width;
+
+	UINT flags(NULL);
+#ifdef DEBUG
+	flags = D3D11_CREATE_DEVICE_DEBUG;
+#endif
+	flags |= D3D11_CREATE_DEVICE_DISABLE_GPU_TIMEOUT;
+
+	HRESULT hr = D3D11CreateDeviceAndSwapChain(/*this->adapter*/NULL, /*D3D_DRIVER_TYPE_UNKNOWN*/D3D_DRIVER_TYPE_HARDWARE,
+		NULL, flags, levels, 8, D3D11_SDK_VERSION, &sdesc,
+		&swapChain, &device, NULL, &deviceContext);
+
+	if (FAILED(hr)) // если устройство никак не создалось, то выходим
+	{
+		string line = "Error create DX11 device";
+		LOGGINGERR(line);
+		return false;
+	}
+
+	this->currentMode = D3D11_FILLMODE::D3D11_FILLMODE_SOLID;
+	this->currentLevel = device->GetFeatureLevel();
+	isRender = true;
+	if (resizeWindow({ (LONG)width, (LONG)height }, NULL) == -1)
+		return false;
+	if (!renderStateEdit(D3D11_FILLMODE::D3D11_FILLMODE_SOLID))
+		return false;
+	this->renderStateEdit(currentMode);
+	if (!setModeAltEnter())
+		return false;
+
+	camera.Init(1.5f * GeneralMath::PI, GeneralMath::PI / 4, 180); // создаем камеру
+	char* versionShader = "5_0"; // версия шейдерной модели
+	collShaders.init(device, LR"(engine_resource\shaders)", versionShader); // загружаем все шейдеры
+	matrixProjection = Matrix::CreatePerspectiveFovLHMatrix(GeneralMath::PI / 4, width / (float)height, SCREEN_NEAR, SCREEN_DEPTH); // перспективная матрица
 	hr = swapChain->SetFullscreenState(true, nullptr);
+
 	return true;
 }
 
@@ -484,79 +490,94 @@ void Graphics::release()
 		rasterizer->Release();
 }
 
-bool Graphics::createTargetRender(int w, int h)
+bool Graphics::createTargetRender()
 {
-	ID3D11Texture2D* texture(nullptr);
-	HRESULT hr = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&texture);
-	hr = device->CreateRenderTargetView(texture, NULL, &backBuffer);
-	if (hr != S_OK)
-	{
-		string line = "Error Create render target view";
-		return false;
-	}
-	texture->Release();
-
-	if(DepthStancil)
+	if (backBuffer)
+		backBuffer->Release();
+	if (DepthStancil)
 		DepthStancil->Release();
 	if (DepthStancilBuffer)
 		DepthStancilBuffer->Release();
 
+	HRESULT hr = swapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
+	if (hr != S_OK)
+		return false;
+
+	ID3D11Texture2D* texture(nullptr);
+	hr = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&texture);
+	hr = device->CreateRenderTargetView(texture, NULL, &backBuffer);
+	if (hr != S_OK)
+		return false;
+	texture->Release();
+
+	createDescsTarget();
+
 	hr = device->CreateTexture2D(&descDepth, NULL, &DepthStancil);
 	if (hr != S_OK)
-	{
-		string line = "Error create CreateTexture2D back buffer";
 		return false;
-	}
 	hr = device->CreateDepthStencilView(DepthStancil, &descDSV, &DepthStancilBuffer);
 	if (hr != S_OK)
-	{
-		string line = "Error create ID3D11RenderTargetView";
 		return false;
-	}
 
 	deviceContext->OMSetRenderTargets(1, &backBuffer, DepthStancilBuffer);
-	this->deviceContext->RSSetViewports(1, &vp);
+	deviceContext->RSSetViewports(1, &vp);
 
 	return true;
 }
 
-bool Graphics::resizeWindow(SIZE p)
+int Graphics::resizeWindow(SIZE p, DWORD target)
 {
-	HRESULT hr(S_OK);
+	if (!isRender)
+		return 0;
+	if (IsIconic(hwnd))
+		return 0;
 
-	int w = p.cx;
-	int h = p.cy;
+	width = p.cx;
+	height = p.cy;
+	if (!createTargetRender())
+		return -1;
 
-	width = (float)w;
-	height = (float)h;
+	matrixProjection = Matrix::CreatePerspectiveFovLHMatrix(GeneralMath::PI / 4, width / (float)height, SCREEN_NEAR, SCREEN_DEPTH); // перспективная матрица
 
-	descDepth.Width = w;
-	descDepth.Height = h;
-	vp.Width = (float)w;
-	vp.Height = (float)h;
-
-	this->deviceContext->OMSetRenderTargets(0, 0, 0); // освобождаем устройство от установленных буферов
-	this->backBuffer->Release();
-	hr = this->swapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0); // вызываем изменение размеров
-	// у цепочки переключения буферов. Метод вычисляет сам нужный размер по клиентской части окна
-	if (hr != S_OK)
+	if (target != NULL)
 	{
-		//LOGMESSAGE("Error resize swap chain!");
-		return false;
+		runFrustum();
+		SendMessage(hwnd, target, NULL, NULL);
 	}
-	this->createTargetRender(w, h);
+	return 1;
+}
 
-	matrixProjection = Matrix::CreatePerspectiveFovLHMatrix(GeneralMath::PI / 4, w / (float)h, SCREEN_NEAR, SCREEN_DEPTH); // перспективная матрица
-	runFrustum();
+bool Graphics::setModeAltEnter()
+{
+	if (!enableAltEnter) // disable mode alt + enter
+	{
+		IDXGIDevice * pDXGIDevice;
+		HRESULT hr = device->QueryInterface(__uuidof(IDXGIDevice), (void **)&pDXGIDevice);
+		if (hr != S_OK)
+			return false;
 
+		IDXGIAdapter * pDXGIAdapter;
+		hr = pDXGIDevice->GetParent(__uuidof(IDXGIAdapter), (void **)&pDXGIAdapter);
+		if (hr != S_OK)
+			return false;
+
+		IDXGIFactory * pIDXGIFactory;
+		hr = pDXGIAdapter->GetParent(__uuidof(IDXGIFactory), (void **)&pIDXGIFactory);
+		if (hr != S_OK)
+			return false;
+
+		hr = pIDXGIFactory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);
+		if (hr != S_OK)
+			return false;
+	}
 	return true;
 }
 
-void Graphics::createDescsTarget(int w, int h)
+void Graphics::createDescsTarget()
 {
 	ZeroMemory(&descDepth, sizeof(descDepth));
-	descDepth.Width = w;
-	descDepth.Height = h;
+	descDepth.Width = width;
+	descDepth.Height = height;
 	descDepth.MipLevels = 1;
 	descDepth.ArraySize = 1;
 	descDepth.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -572,15 +593,15 @@ void Graphics::createDescsTarget(int w, int h)
 	descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS; // для качества MSAA = 4, нужен этот параметр
 	descDSV.Texture2D.MipSlice = 0;
 
-	vp.Width = (float)w;
-	vp.Height = (float)h;
+	vp.Width = (float)width;
+	vp.Height = (float)height;
 	vp.MinDepth = 0.0f;
 	vp.MaxDepth = 1.0f;
 	vp.TopLeftX = 0;
 	vp.TopLeftY = 0; 
 }
 
-void Graphics::renderStateEdit(const D3D11_FILLMODE& fm)
+bool Graphics::renderStateEdit(const D3D11_FILLMODE& fm)
 {
 	if (rasterizer)
 		rasterizer->Release();
@@ -589,13 +610,13 @@ void Graphics::renderStateEdit(const D3D11_FILLMODE& fm)
 	wfd.FillMode = (D3D11_FILL_MODE)fm;
 	wfd.CullMode = D3D11_CULL_BACK;
 	wfd.DepthClipEnable = true;
-	if (device->CreateRasterizerState(&wfd, &rasterizer) != S_OK)
-	{
-		//LOGMESSAGE("Error create rasterizer state!");
-	}
+	HRESULT hr = device->CreateRasterizerState(&wfd, &rasterizer);
+	if (hr != S_OK)
+		return false;
+	return true;
 }
 
-void Graphics::renderStateEdit(const D3D11_CULL_MODE & cm)
+bool Graphics::renderStateEdit(const D3D11_CULL_MODE & cm)
 {
 	if (rasterizer)
 		rasterizer->Release();
@@ -605,9 +626,46 @@ void Graphics::renderStateEdit(const D3D11_CULL_MODE & cm)
 	//wfd.FillMode = (D3D11_FILL_MODE)this->current_mode;
 	wfd.CullMode = cm;
 	wfd.DepthClipEnable = true;
-	if (device->CreateRasterizerState(&wfd, &rasterizer) != S_OK)
+	HRESULT hr = device->CreateRasterizerState(&wfd, &rasterizer);
+	if (hr != S_OK)
+		return false;
+	return true;
+}
+
+void Graphics::switchFocusForAltTab()
+{
+	if (modeScreen && !IsIconic(hwnd))
 	{
-		//LOGMESSAGE("Error create rasterizer state!");
+		isRender = false;
+		fullscreenPlacement.length = sizeof(WINDOWPLACEMENT);
+		GetWindowPlacement(hwnd, &fullscreenPlacement);
+		ShowWindow(hwnd, SW_SHOWMINNOACTIVE);
+		swapChain->SetFullscreenState(false, nullptr);
+	}
+}
+
+void Graphics::switchModeScreen()
+{
+	modeScreen = modeScreen ? false : true;
+	if (modeScreen) // сохраняем состояние перед переходом в полный экран
+	{
+		windowedPlacement.length = sizeof(WINDOWPLACEMENT);
+		GetWindowPlacement(hwnd, &windowedPlacement);
+	}
+	HRESULT hr = swapChain->SetFullscreenState(modeScreen, nullptr);
+	if (hr != S_OK)
+		PostMessage(hwnd, WM_QUIT, NULL, NULL);
+	if (!modeScreen) // восстанавливаем после выхода из полноэкранного
+		SetWindowPlacement(hwnd, &windowedPlacement);
+}
+
+void Graphics::restoreFullScreen(DWORD fl)
+{
+	if (modeScreen && IsIconic(hwnd) && WA_ACTIVE == fl)
+	{
+		isRender = true;
+		SetWindowPlacement(hwnd, &fullscreenPlacement);
+		swapChain->SetFullscreenState(true, nullptr);
 	}
 }
 

@@ -18,7 +18,8 @@ using DVertexColor = brain_memory<VertexColor>;
 // сообщения windows
 #define WM_ADDMODELMOUSE WM_USER + 100
 #define WM_RAYPICK WM_USER + 101
-#define WM_RENDER WM_USER + 103
+#define WM_RENDERE WM_USER + 103
+#define WM_RENDERG WM_USER + 104
 
 // типы данных
 struct BoundingBoxData // данные для создания BBox

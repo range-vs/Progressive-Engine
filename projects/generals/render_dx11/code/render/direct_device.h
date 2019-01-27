@@ -35,6 +35,15 @@ class Graphics // Одиночка
 	vector<Model> packModels; // все модели в памяти
 	vector<vector<CharactersModel>> positionModels; // все позиции всех моделей на карте
 
+	bool typeApp; // что запущено(true - редактор)
+
+	// screen
+	bool modeScreen; // режим экрана при запуске. Используется только в игре
+	bool isRender; // флаг надо ли сейчас рендерить
+	WINDOWPLACEMENT fullscreenPlacement; // состояние экрана в полном режиме
+	WINDOWPLACEMENT windowedPlacement; // в оконном
+	bool enableAltEnter; // режим alt + enter
+
 	// ray pick
 	bool isControl; // нажат ли шифт
 	int modeManipulator; // режим манипулирования сценой
@@ -61,8 +70,8 @@ class Graphics // Одиночка
 	int denominator; // знаменатель
 	D3D11_FILLMODE currentMode; // текущий режим отрисовки
 
-	bool createTargetRender(int w, int h); // создаем целевое устройство рендеринга
-	void createDescsTarget(int w, int h); // создаем описание поверхностей для целевого устройства рендеринга
+	bool createTargetRender(); // создаем целевое устройство рендеринга
+	void createDescsTarget(); // создаем описание поверхностей для целевого устройства рендеринга
 	bool _draw(const D3D11_FILLMODE& m); // отрисовка с определённым режимом
 
 	debug_console dc;
@@ -105,12 +114,13 @@ public:
 	void renderEditor();
 	void renderGame();
 	void release();
-	bool resizeWindow(SIZE p);
-	void renderStateEdit(const D3D11_FILLMODE&);
-	void renderStateEdit(const D3D11_CULL_MODE&);
+	bool renderStateEdit(const D3D11_FILLMODE&);
+	bool renderStateEdit(const D3D11_CULL_MODE&);
 	ID3D11DeviceContext* getContext() { return deviceContext; }
 	ID3D11Device* getDevice() { return device; }
 	Matrix& getProjection() { return matrixProjection; }
+
+	bool getTypeApp() { return typeApp; }
 
 	// массовое выделение
 	void setPressControl(bool stat) { this->isControl = stat; }  // нажимаем/отжимаем контрол
@@ -124,6 +134,15 @@ public:
 
 	// доступ к дескриптору
 	HWND getDesctiptor() { return this->hwnd; }
+	int getWidth() { return width; }
+	int getHeight() { return height; }
+
+	// screen
+	void switchFocusForAltTab(); // переключаем окно по alt + tab
+	void switchModeScreen(); // переключаем режим экрана
+	void restoreFullScreen(DWORD fl); // восстанавливаем свёрнутое окно в полноэкранном режиме
+	int resizeWindow(SIZE p, DWORD target); // изменение размеров окна
+	bool setModeAltEnter(); // установка режима alt + enter
 
 	// ray pick 
 	void selectModel(int _x, int _y); // метод выделения моделей

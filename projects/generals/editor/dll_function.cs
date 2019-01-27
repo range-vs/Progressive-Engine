@@ -8,7 +8,7 @@ namespace gui
     {
         // render
         [DllImport("render_dx11.dll")]
-        public static extern uint start_render(IntPtr hInst, IntPtr mainWindow, IntPtr consoleWindow);
+        public static extern uint startEditor(IntPtr hInst, IntPtr mainWindow, IntPtr consoleWindow);
 
         // function editor <--> render
         [DllImport("render_dx11.dll")]

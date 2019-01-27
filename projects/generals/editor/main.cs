@@ -49,7 +49,7 @@ namespace gui
         private void _init(object obj)
         {
             types.ParamsRenderThread paramsRender = (types.ParamsRenderThread)obj;
-            dll_function.start_render(paramsRender.hInstCurrentProcess, paramsRender.hwndMain, IntPtr.Zero);
+            dll_function.startEditor(paramsRender.hInstCurrentProcess, paramsRender.hwndMain, IntPtr.Zero);
         }
 
         private void InitManipulators()

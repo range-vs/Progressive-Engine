@@ -17,10 +17,10 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hIntOld, LPSTR cmdLine, int typeSh
 	/*if (isMonitor(args[1], &hLib))
 	{
 		if (!wcscmp(L"-editor", args[2])) // запускаем редактор
-		{
-			WriteFile(&hLib);
-			Program::Main(line);
-		}
+		{*/
+			/*WriteFile(&hLib);
+			Program::Main(line);*/
+		/*}
 		else if (!wcscmp(L"-game", args[2])) // запускаем игру
 		*/{
 				HINSTANCE hLib = LoadLibrary(L"game.dll");
