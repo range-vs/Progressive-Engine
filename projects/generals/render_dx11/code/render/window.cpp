@@ -2,7 +2,7 @@
 
 HHOOK Window::ExistingKeyboardProc(NULL);
 
-bool Window::Init(HINSTANCE hInst, const wchar_t * name, const wchar_t * _class, int x, int y, int w, int h, const HWND& hwnd_main, int style)
+bool Window::init(HINSTANCE hInst, const wchar_t * name, const wchar_t * _class, int x, int y, int w, int h, const HWND& hwnd_main, int style)
 {
 	hookKeyboardProc(hInst);
 
@@ -22,7 +22,7 @@ bool Window::Init(HINSTANCE hInst, const wchar_t * name, const wchar_t * _class,
 	ZeroMemory(&wnd, sizeof WNDCLASSEX);
 	wnd.cbSize = sizeof WNDCLASSEX;
 	wnd.hInstance = hInst;
-	wnd.lpfnWndProc = Window::WindowProc;
+	wnd.lpfnWndProc = Window::windowProc;
 	wnd.lpszClassName = _class;
 	wnd.style = CS_HREDRAW | CS_VREDRAW;
 	wnd.hCursor = LoadCursor(NULL, IDC_CROSS);
@@ -49,7 +49,7 @@ bool Window::Init(HINSTANCE hInst, const wchar_t * name, const wchar_t * _class,
 	return true;
 }
 
-LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
+LRESULT CALLBACK Window::windowProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
 	static Window* w(nullptr);
 	CREATESTRUCT* data;
@@ -127,7 +127,7 @@ LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT message, WPARAM wparam, LPAR
 	return DefWindowProc(hwnd, message, wparam, lparam);
 }
 
-WPARAM Window::RunEditor()
+WPARAM Window::runEditor()
 {
 	MSG msg;
 	while (true)
@@ -146,7 +146,7 @@ WPARAM Window::RunEditor()
 	return msg.wParam;
 }
 
-WPARAM Window::RunGame()
+WPARAM Window::runGame()
 {
 	MSG msg;
 	while (true)
@@ -165,14 +165,14 @@ WPARAM Window::RunGame()
 	return msg.wParam;
 }
 
-void Window::Release()
+void Window::release()
 {
 	DestroyWindow(hwnd);
 	UnregisterClass(ClassName.c_str(), hInst);
 	unHookKeyboardProc();
 }
 
-void Window::AddListener(Listener * l)
+void Window::addListener(Listener * l)
 {
 	Ls->Add(l);
 }

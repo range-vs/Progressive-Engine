@@ -172,15 +172,15 @@ UINT Framework::RunEditor(const HINSTANCE& hInst, const HWND& hwnd_main)
 
 	RECT rect = { 0 };
 	GetWindowRect(hwnd_main, &rect);
-	bool result = Main->Init(hInst, L"Progressive Engine Editor", L"engine_window", CW_USEDEFAULT, CW_USEDEFAULT,
+	bool result = Main->init(hInst, L"Progressive Engine Editor", L"engine_window", CW_USEDEFAULT, CW_USEDEFAULT,
 		rect.right - rect.left, rect.bottom - rect.top, hwnd_main, WS_CHILDWINDOW); // запускаем инициализацию окна
 	if (!result)
 		return -1;
 
-	Main->AddListener(kpselect.get()); // добавляем слушателя - выбор объекта/треугольника
-	Main->AddListener(cameraListener.get()); // добавляем слушателя - управление камерой
+	Main->addListener(kpselect.get()); // добавляем слушателя - выбор объекта/треугольника
+	Main->addListener(cameraListener.get()); // добавляем слушателя - управление камерой
 	Main->showWindow(SW_SHOW);
-	result = Device->initEditor(Main->get_hwnd()); // здесь запускаем инициализацию устройства dx
+	result = Device->initEditor(Main->getDescriptor()); // здесь запускаем инициализацию устройства dx
 	if (!result)
 		return -1;
 
@@ -188,8 +188,8 @@ UINT Framework::RunEditor(const HINSTANCE& hInst, const HWND& hwnd_main)
 	child = Main->GetHWND();
 	SetFocus(main);*/
 
-	WPARAM message(Main->RunEditor());
-	Main->Release();
+	WPARAM message(Main->runEditor());
+	Main->release();
 	return (UINT)message;
 }
 
@@ -213,19 +213,19 @@ UINT Framework::RunGame(const HINSTANCE & hInst, const HWND& hwnd_main)
 	else
 		LOGGING("Create listener #1: OK");
 
-	bool result = Main->Init(hInst, L"Progressive Engine Game", L"game_window", 0, 0, // костыль, размер экрана надо вычислить
+	bool result = Main->init(hInst, L"Progressive Engine Game", L"game_window", 0, 0, // костыль, размер экрана надо вычислить
 		1920, 1080, hwnd_main, WS_OVERLAPPEDWINDOW); // запускаем инициализацию окна
 	if (!result)
 		return -1;
 
-	Main->AddListener(gameKey.get());
+	Main->addListener(gameKey.get());
 
 	Main->showWindow(SW_SHOW);
-	result = Device->initGame(Main->get_hwnd()); // здесь запускаем инициализацию устройства dx
+	result = Device->initGame(Main->getDescriptor()); // здесь запускаем инициализацию устройства dx
 	if (!result)
 		return -1;
 
-	WPARAM message(Main->RunGame());
-	Main->Release();
+	WPARAM message(Main->runGame());
+	Main->release();
 	return (UINT)message;
 }
